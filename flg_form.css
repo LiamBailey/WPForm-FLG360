@@ -1,0 +1,61 @@
+form.flg-form {
+    width:100%;
+}
+
+form.flg-form fieldset {
+    width:100%;
+    border:0;
+}
+
+form.flg-form label {
+    width:23%;
+    display:block;
+    float:left;
+    margin:3px 0 auto 0;
+    padding:0;
+}
+
+form.flg-form input,form.flg-form textarea {
+    width:75%;
+}
+
+
+form.flg-form textarea {
+    height:200px;
+}
+
+.flg-success {
+    padding:10px;
+    color:white;
+    background:green;
+}
+
+.flg-error {
+    background:red;
+    color:purple;
+}
+
+#flg-submit {
+    border-radius:7px;
+    -moz-border-radius:7px;
+    -webkit-border-radius:7px;
+    padding:5px;
+    text-align:center;
+}
+
+.flg-form .subscribe-container {
+    text-align:left;
+}
+
+.flg-form .subscribe-container input[type='checkbox'],.flg-form .subscribe-container label {
+    width:auto;
+    margin:0 10px;
+}
+
+.flg-form .submit-container {
+    text-align:center
+}
+
+.flg-form p.required label:after {
+    content: "*";
+}
