@@ -24,7 +24,7 @@ If you set 'contact' as the form_type attribute, then instead of username and pa
 
 The function that does all that field adding ends with a filter, as does the function that configures all the field settings such as type/required etc for easy addition of custom field types.
 
-More from Webby Scots(http://webbyscots.com/)
+More from [Webby Scots](http://webbyscots.com/)
 
 == Installation ==
 
