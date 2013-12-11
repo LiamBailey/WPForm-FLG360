@@ -3,7 +3,7 @@
 /*
   Plugin Name: WP Form to FLG
   Description: Allows manual selection of a 'main' category for each product for better permalinks and SEO.
-  Version: 1.0.0
+  Version: 1.0.1
   Author: Liam Bailey (Webby Scots Wordpress - WSWP)
   Author URI: http://www.webbyscots.com/
   License: GNU General Public License v3.0
@@ -25,14 +25,14 @@ class wswpFormFLG {
         define("PLUGIN_PATH", plugin_dir_path(__FILE__));
         define("PLUGIN_TEXTDOMAIN", 'flg_form');
         define('WP_SUBSCRIPTIONS',false);
-        add_shortcode('flg-form', array(&$this, 'flg_form'));
-        add_action('wp_enqueue_scripts', array(&$this, 'add_scripts_styles'));
-        add_action('wp_ajax_process_flg_form', array(&$this, 'process_form'));
-        add_action('wp_ajax_nopriv_process_flg_form', array(&$this, 'process_form'));
-        add_action('wp', array(&$this, 'process_form'));
+        add_shortcode('flg-form', array($this, 'flg_form'));
+        add_action('wp_enqueue_scripts', array($this, 'add_scripts_styles'));
+        add_action('wp_ajax_process_flg_form', array($this, 'process_form'));
+        add_action('wp_ajax_nopriv_process_flg_form', array($this, 'process_form'));
+        add_action('wp', array($this, 'process_form'));
         require_once('wswp-form-flg-settings.php');
         register_activation_hook(__FILE__, setup_form_flg_settings());
-        add_action('admin_notices', array(&$this, 'key_needed'));
+        add_action('admin_notices', array($this, 'key_needed'));
     }
 
     function key_needed() {
@@ -410,7 +410,7 @@ class wswpFormFLG {
                 array_splice($default_fields, count($default_fields) - 1, 0, array('subscribe'));
                 break;
         }
-        return apply_filters('wswp_flgform_filter_default_fields', &$default_fields);
+        return apply_filters('wswp_flgform_filter_default_fields', $default_fields);
     }
 
     protected function get_fields() {

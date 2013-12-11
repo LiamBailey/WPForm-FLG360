@@ -54,3 +54,6 @@ Yes, there is a filter for the fields, both when they are set and when they are 
 = 1.0.0 =
 First release of plugin
 
+= 1.0.1 =
+Fixes pass by reference fatal error
+
