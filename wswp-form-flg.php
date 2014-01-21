@@ -228,7 +228,6 @@ class wswpFormFLG {
                         //good request
                         $output['message'] = "<p> Response Status: Passed - Message: " . $dom->getElementsByTagName('message')->item(0)->textContent;
                         $output['message'] .= "<p> FLG NUMBER: " . $dom->getElementsByTagName('id')->item(0)->textContent;
-                        mail("liam@write-about-property.com", "CURL Sucess", $output['message']);
                         $output['flgNo'] = $dom->getElementsByTagName('id')->item(0)->textContent;
                         return $output;
                     } else {

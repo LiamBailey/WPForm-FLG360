@@ -1,12 +1,12 @@
 <?php
 /*
  * wswp-form-flg-settings.php
- * 
+ *
  * Copyright 2012 Liam Bailey Webby Scots
- * 
+ *
  * Hook into Settings API and set up fields for setting publish url and webmaster tools etc
- * 
- * 
+ *
+ *
  */
 global $form_flg_settings;
 $form_flg_settings = (get_option('form-flg-settings')) ? get_option('form-flg-settings') : form_flg_get_settings();
@@ -42,7 +42,7 @@ function register_form_flg_settings() {
 	add_settings_section('section-one', 'FLG Setup', 'addsection_settings','form_flg_settings');
 	//FLG Key
 	add_settings_field('settingsfield_flg_key','FLG API Key','addsettingsfield_flg_key','form_flg_settings','section-one');
-	
+
 }
 
 /*Codes to display settings fields */
@@ -54,14 +54,14 @@ function addsection_settings()
 
 function addsettingsfield_flg_key() {
 	global $form_flg_settings;
-	
+
 	echo "<input type='text' id='settingsfield_flg_key' name='form-flg-settings[flg_key]' value='" . $form_flg_settings['flg_key'] . "' />";
 }
 
 
 function validate_settings($input) {
     session_start();
-	
+
         return apply_filters('validate_settings',$input);
 }
 
