@@ -3,9 +3,9 @@
 /*
   Plugin Name: WP Form to FLG
   Description: Allows manual selection of a 'main' category for each product for better permalinks and SEO.
-  Version: 1.0.1
+  Version: 1.0.2
   Author: Liam Bailey (Webby Scots Wordpress - WSWP)
-  Author URI: http://www.webbyscots.com/
+  Author URI: http://webbyscots.com/
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
@@ -24,7 +24,7 @@ class wswpFormFLG {
         session_start();
         define("PLUGIN_PATH", plugin_dir_path(__FILE__));
         define("PLUGIN_TEXTDOMAIN", 'flg_form');
-        define('WP_SUBSCRIPTIONS',false);
+        define('WP_SUBSCRIPTIONS',true);
         add_shortcode('flg-form', array($this, 'flg_form'));
         add_action('wp_enqueue_scripts', array($this, 'add_scripts_styles'));
         add_action('wp_ajax_process_flg_form', array($this, 'process_form'));
@@ -142,14 +142,27 @@ class wswpFormFLG {
             }
         }
         $got_user = false;
-        if ($_POST['form_type'] == "subscribe" || $_POST['subscribe'] == "Yes" && WP_SUBSCRIPTIONS) {
+        if ($_POST['form_type'] == "subscribe" || ($_POST['flg_formsubscribe'] == "Yes" && WP_SUBSCRIPTIONS == true)) {
             if (is_user_logged_in()) {
+                $got_user = true;
                 $uid = get_current_user_id();
                 $user = new WP_User($uid);
                 $user->add_role('subscriber');
             } else {
-                $uid = wp_insert_user($user_array);
-                wp_new_user_notification($uid, $_POST['user_pass']);
+                $ulw = explode("@",$_POST['flg_form']['user_email']);
+                $user_login = $ulw[0];
+                if (intval(username_exists($user_login)) > 0) {
+                    $user_login = $ulw[0] . "_" . $ulw[1];
+                }
+                if (intval(username_exists($user_login)) > 0) {
+                    $got_user = true;
+                    $uid = $user_login;
+                }
+                else {
+                    $user_array['user_login'] = $user_login;
+                    $uid = wp_insert_user($user_array);
+                    wp_new_user_notification($uid, $_POST['user_pass']);
+                }
             }
             if (!is_wp_error($uid)) {
                 $got_user = true;
@@ -158,13 +171,13 @@ class wswpFormFLG {
                         add_user_meta($uid, $key, $value, true);
                     }
                 }
-                $db_string = "User was successfully added to subscriber list";
+                $db_string .= "User was successfully added to subscriber list";
             } else {
-                $got_user = false;
-                $db_string = "Insert subscriber to DB failed - reason: " . $uid->get_error_message();
+                $db_string .= "Insert subscriber to DB failed - reason: " . $uid->get_error_message();
             }
         }
         $FLGResponse = $this->doFLG($user_array, $meta_array);
+
         if ($got_user && isset($FLGResponse['flgNo']))
             add_user_meta($uid,'FLGNo',$FLGResponse['flgNo'],true);
 
@@ -218,7 +231,7 @@ class wswpFormFLG {
         $output['success'] = true;
         if (curl_errno($ch)) {
             $output['success'] = false;
-            $output['message'] = 'ERROR -> ' . curl_errno($ch) . ': ' . curl_error($ch);
+            $output['message'] = 'ERROR from curl_errno -> ' . curl_errno($ch) . ': ' . curl_error($ch);
         } else {
             $returnCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             switch ($returnCode) {
@@ -259,14 +272,13 @@ class wswpFormFLG {
             $email .= "<p><b>Additional info: </b>" . $_POST['flg_form']['description'] . "</p>";
 
         $email .= $FLGResponse['message'];
+        $email .= " : " . $db_string;
         return $this->send_mail($subject, $email);
     }
 
     protected function send_mail($subject, $message) {
         require_once PLUGIN_PATH . "swift/lib/swift_required.php";
         $plain_message = strip_tags(str_replace("<p>", "\r\n", $message));
-        $url_parts = parse_url(site_url());
-        $host = str_replace("www.", "", $url_parts['host']);
         // Create the message
         $message = Swift_Message::newInstance()
 
@@ -274,7 +286,7 @@ class wswpFormFLG {
                 ->setSubject($subject)
 
                 // Set the From address with an associative array
-                ->setFrom("flg_form@{$host}")
+                ->setFrom(get_option('admin_email'))
 
                 // Set the To addresses with an associative array
                 ->setTo(array(get_option('admin_email')))
@@ -283,15 +295,8 @@ class wswpFormFLG {
                 ->setBody($plain_message)
 
                 // And optionally an alternative body
-                ->addPart($message, 'text/html')
-                ->addBcc('info@webbyscots.com');
-
-        // Create the Transport
-        // Sendmail
-          $transport = Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
-
-          // Mail
-          //$transport = Swift_MailTransport::newInstance();
+                ->addPart($message, 'text/html');
+        $transport = Swift_MailTransport::newInstance();
 
 
         // Create the Mailer using your created Transport
@@ -388,7 +393,8 @@ class wswpFormFLG {
                 $output .= "<textarea name='flg_form[{$name}]' class='{$class}' id='{$name}' rows='{$rows}' cols='{$cols}'>{$current_val}</textarea>";
                 break;
             case "subscribe":
-                $output .= "<input type='checkbox' name='flg_form{$name}' class='${class}' id='{$name}' value='Yes' />";
+                $checked = $_SESSION['flg_form'][$name] == "Yes" ? "checked" : "";
+                $output .= "<input $checked type='checkbox' name='flg_form{$name}' class='${class}' id='{$name}' value='Yes' />";
                 break;
         }
         return $output;
