@@ -3,7 +3,7 @@
 /*
   Plugin Name: WP Form to FLG
   Description: Allows manual selection of a 'main' category for each product for better permalinks and SEO.
-  Version: 1.0.2
+  Version: 1.0.3
   Author: Liam Bailey (Webby Scots Wordpress - WSWP)
   Author URI: http://webbyscots.com/
   License: GNU General Public License v3.0
@@ -83,7 +83,7 @@ class wswpFormFLG {
     function process_form() {
         if (isset($_POST['flg_form'])) {
             global $post;
-            $response = array();
+            $this->response = array();
             $post_url = ($post->post_type == "post" || $post->post_type == "page") ? get_permalink($_POST['flg_form_post_id']) : get_post_permalink($_POST['flg_form_post_id']);
             if (!wp_verify_nonce($_POST['flg_form_nonce'], 'flg_form_noncerator_' . $_POST['flg_form_post_id']))
                 return;
@@ -92,39 +92,39 @@ class wswpFormFLG {
                 return;
 
             if (isset($_POST['flg_form']['user_middlename']) && $_POST['flg_form']['user_middlename'] != "") {
-                $response['success'] = true;
-                $_SESSION['flg_response'] = serialize($response);
+                $this->response['success'] = true;
+                $_SESSION['flg_response'] = serialize($this->response);
                 return;
             }
 
             $form_fields = !empty($_SESSION['flg_fields']) ? unserialize($_SESSION['flg_fields']) : $this->get_form_fields[$_POST['form_type']];
             unset($form_fields[array_search('middle_name',$form_fields)]);
             $main_fields = $this->get_fields();
-            $response['flg_form_errors'] = array();
-            $response['success'] = true;
+            $this->response['flg_form_errors'] = array();
+            $this->response['success'] = true;
             foreach ($form_fields as $field) {
                 $field_info = $main_fields[$field];
                 if ($field_info['required'] && $_POST['flg_form'][$field_info['name']] == '') {
-                    $response['success'] = false;
-                    $response['flg_form_errors']['required_error'] = "Please fill in all required fields";
+                    $this->response['success'] = false;
+                    $this->response['flg_form_errors']['required_error'] = "Please fill in all required fields";
                 }
                 if ($field == "email" && !$this->valid_email($_POST['flg_form']['user_email'])) {
-                    $resonse['success'] = false;
-                    $response['flg_form_errors']['email_eror'] = "Invalid email";
+                    $this->resonse['success'] = false;
+                    $this->response['flg_form_errors']['email_eror'] = "Invalid email";
                 }
-                if ($field_info['confirm'] && $_POST['flg_form'][$field_info['name']] != $_POST['flg_form'][$field_info['name']]['confirm']) {
-                    $response['success'] = false;
-                    $response['flg_form_errors']['confirm_error'] = $field . " entry and confirmation don't match";
+                if ($field_info['confirm'] && $_POST['flg_form'][$field_info['name']] != $_POST['flg_form'][$field_info['name']."_confirm"]) {
+                    $this->response['success'] = false;
+                    $this->response['flg_form_errors']['confirm_error'] = $field_info['name'] . " entry " . $_POST['flg_form'][$field_info['name']] . " and confirmation " . $_POST['flg_form'][$field_info['name']."_confirm"] . " don't match";
                 }
                 $_SESSION['flg_form'][$field_info['name']] = $_POST['flg_form'][$field_info['name']];
             }
-            if ($response['success'] == true) {
-                $response['success'] = (intval($this->process_data()) > 0);
+            if ($this->response['success'] == true) {
+                $this->response['success'] = (intval($this->process_data()) > 0);
             }
             if (defined('DOING_AJAX') && DOING_AJAX) {
-                echo json_encode($response);
+                echo json_encode($this->response);
             } else {
-                $_SESSION['flg_response'] = serialize($response);
+                $_SESSION['flg_response'] = serialize($this->response);
             }
         }
     }
@@ -149,19 +149,35 @@ class wswpFormFLG {
                 $user = new WP_User($uid);
                 $user->add_role('subscriber');
             } else {
+                $username = $_POST['form_type'] == "subscribe" ? $_POST['flg_form']['user_login'] : $_POST['flg_form']['user_email'];
                 $ulw = explode("@",$_POST['flg_form']['user_email']);
-                $user_login = $ulw[0];
-                if (intval(username_exists($user_login)) > 0) {
-                    $user_login = $ulw[0] . "_" . $ulw[1];
-                }
-                if (intval(username_exists($user_login)) > 0) {
-                    $got_user = true;
-                    $uid = $user_login;
+                if (strstr($username,"@")) {
+                    $use_email = true;
+                    $email = $username;
+                    $user_login = $ulw[0];
                 }
                 else {
-                    $user_array['user_login'] = $user_login;
-                    $uid = wp_insert_user($user_array);
-                    wp_new_user_notification($uid, $_POST['user_pass']);
+                    $user_login = $username;
+                }
+                if ($use_email && get_user_by('email',$email)) {
+                    $this->response['flg_form_errors']['not_subscribed'] = "There is already a member with that email";
+                    $db_string = "User is already a member with that email";
+                }
+                else {
+                    if (intval(username_exists($user_login)) > 0) {
+                        $original = $user_login;
+                        $user_login = $ulw[0] . "_" . $ulw[1];
+                        $this->response['flg_form_errors']['username_changed'] = "We had to use $user_login as your username";
+                    }
+                    if (intval(username_exists($user_login)) > 0) {
+                        $got_user = true;
+                        $uid = $user_login;
+                    }
+                    else {
+                        $user_array['user_login'] = $user_login;
+                        $uid = wp_insert_user($user_array);
+                        wp_new_user_notification($uid, $_POST['user_pass']);
+                    }
                 }
             }
             if (!is_wp_error($uid)) {
@@ -373,7 +389,7 @@ class wswpFormFLG {
                 $output .= "<input type='{$type}' name='flg_form[{$name}]' id='{$name}' class='{$class}' value='{$current_val}' />";
                 if ($confirm == true) {
                     $output.= "<label for='{$name}-confirm'>Confirm {$label}</label>";
-                    $output .= "<input type='{$type}' name='flg_form[{$name}]['confirm'] id='{$name}-confirm' class='{$class}' value='{$current_val}' />";
+                    $output .= "<input type='{$type}' name='flg_form[{$name}_confirm]' id='{$name}-confirm' class='{$class}' value='{$current_val}' />";
                 }
                 break;
             case "submit":

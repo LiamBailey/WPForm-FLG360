@@ -2,7 +2,7 @@
 Contributors: Webby Scots
 Tags: forms, flg360
 Requires at least: 3.0
-Tested up to: 3.6
+Tested up to: 3.8
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -56,4 +56,10 @@ First release of plugin
 
 = 1.0.1 =
 Fixes pass by reference fatal error
+
+= 1.0.2 =
+Sets subscriptions to be allowed by default. Fixes problems with adding user in contact type form, and email send errors
+
+= 1.0.3 =
+Fixes problems adding users in the subscribe type form
 
