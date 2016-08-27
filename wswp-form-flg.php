@@ -2,7 +2,7 @@
 
 /*
   Plugin Name: WP Form to FLG
-  Description: Allows manual selection of a 'main' category for each product for better permalinks and SEO.
+  Description: Creates a flg-form shortcode, and sends submissions as leads into FLG360
   Version: 1.0.3
   Author: Liam Bailey (Webby Scots Wordpress - WSWP)
   Author URI: http://webbyscots.com/
@@ -10,12 +10,6 @@
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-/**
- *
- * Posts list
- *
- */
-ini_set('display_errors', 1);
 $flgForm = new wswpFormFLG();
 
 class wswpFormFLG {
