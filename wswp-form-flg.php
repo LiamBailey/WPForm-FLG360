@@ -3,7 +3,7 @@
 /*
   Plugin Name: WP Form to FLG
   Description: Creates a flg-form shortcode, and sends submissions as leads into FLG360
-  Version: 1.0.3
+  Version: 1.0.4
   Author: Liam Bailey (Webby Scots Wordpress - WSWP)
   Author URI: http://webbyscots.com/
   License: GNU General Public License v3.0
